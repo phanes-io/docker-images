@@ -29,3 +29,21 @@ steps:
         from_secret: harbor_user
       password:
         from_secret: harbor_token
+
+  - name: build-push-go
+    # NOTE: must stay the plain ref — it matches WOODPECKER_PLUGINS_PRIVILEGED
+    # (exact tag), routing it via the proxy-cache would drop privileged mode.
+    image: woodpeckerci/plugin-docker-buildx:6.1.1
+    settings:
+      registry: registry.local.phanes.net
+      repo: registry.local.phanes.net/phanes-io/go-builder
+      context: go-builder
+      dockerfile: go-builder/Dockerfile
+      platforms: linux/amd64
+      tags:
+        - bookworm
+        - latest
+      username:
+        from_secret: harbor_user
+      password:
+        from_secret: harbor_token
