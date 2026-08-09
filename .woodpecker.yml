@@ -1,0 +1,31 @@
+# Build the shared rust-builder base image locally and push it to Harbor.
+# Replaces the old GitHub Actions workflow that pushed to ghcr.io.
+# Consumed by phanes-io/mtxdns-proxy CI as
+#   registry.local.phanes.net/phanes-io/rust-builder:bookworm
+#
+# Requires repo secrets: harbor_user (robot$ci) + harbor_token.
+# A weekly rebuild can be added as a Woodpecker cron on this repo (UI/API).
+
+when:
+  - event: push
+    branch: master
+  - event: manual
+
+steps:
+  - name: build-push
+    # NOTE: must stay the plain ref — it matches WOODPECKER_PLUGINS_PRIVILEGED
+    # (exact tag), routing it via the proxy-cache would drop privileged mode.
+    image: woodpeckerci/plugin-docker-buildx:6.1.1
+    settings:
+      registry: registry.local.phanes.net
+      repo: registry.local.phanes.net/phanes-io/rust-builder
+      context: rust-builder
+      dockerfile: rust-builder/Dockerfile
+      platforms: linux/amd64
+      tags:
+        - bookworm
+        - latest
+      username:
+        from_secret: harbor_user
+      password:
+        from_secret: harbor_token
