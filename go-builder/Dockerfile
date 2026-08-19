@@ -9,6 +9,7 @@ RUN apt-get update -qq \
         git \
         curl \
         ca-certificates \
+        postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Go
@@ -24,3 +25,5 @@ ENV PATH="/usr/local/go/bin:/root/go/bin:${PATH}"
 # Verify installation
 RUN go version && gofmt --help >/dev/null 2>&1 || true
 RUN gitleaks version
+# mtxdns-dashboard's check.yml seeds its CI database with psql/pg_isready
+RUN pg_isready --version && psql --version
