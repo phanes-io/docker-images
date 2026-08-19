@@ -9,7 +9,16 @@ RUN apt-get update -qq \
         git \
         curl \
         ca-certificates \
-        postgresql-client \
+        gnupg \
+    && rm -rf /var/lib/apt/lists/*
+
+# postgresql-client-17 from PGDG: Debian 12 ships client 15, and pg_dump
+# refuses to dump a newer server ("aborting because of server version
+# mismatch") — the CI database is postgres 17.
+RUN curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /usr/share/keyrings/pgdg.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/pgdg.gpg] http://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
+    && apt-get update -qq \
+    && apt-get install -y -qq --no-install-recommends postgresql-client-17 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Go
@@ -26,4 +35,4 @@ ENV PATH="/usr/local/go/bin:/root/go/bin:${PATH}"
 RUN go version && gofmt --help >/dev/null 2>&1 || true
 RUN gitleaks version
 # mtxdns-dashboard's check.yml seeds its CI database with psql/pg_isready
-RUN pg_isready --version && psql --version
+RUN pg_isready --version && pg_dump --version | grep -q " 17\." 
